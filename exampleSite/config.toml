@@ -5,13 +5,22 @@ disableKinds = ["sitemap", "RSS"]
 theme = "."
 themesDir = "../"
 
+# uncomment for browsing at file:///
+# relativeURLs = true
+# uglyURLs = true
+
 [author]
 name = "Josh Dzielak"
-
-[params.reveal_hugo]
-history = true
 
 [outputFormats.Reveal]
 baseName = "index"
 mediaType = "text/html"
 isHTML = true
+
+[params.reveal_hugo]
+history = true
+
+# used in content/template-example
+[params.reveal_hugo.templates.grey]
+background = "#424242"
+transition = "convex"

@@ -3,6 +3,7 @@
 ![License badge](https://img.shields.io/github/license/dzello/reveal-hugo.svg)
 [![Website up/down badge](https://img.shields.io/website-up-down-green-red/https/reveal-hugo.dzello.com.svg)](https://reveal-hugo.dzello.com/)
 ![Last commit badge](https://img.shields.io/github/last-commit/dzello/reveal-hugo.svg)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/70c5c7a6-5fb2-40a9-98e1-20aa21336201/deploy-status)](https://app.netlify.com/sites/reveal-hugo/deploys)
 
 A Hugo theme for [Reveal.js](https://revealjs.com/) that makes authoring and customization a breeze. With it, you can turn any properly-formatted Hugo content into a HTML presentation.
 
@@ -31,7 +32,7 @@ Salut.
 Hola.
 ```
 
-Just use `---` to split content into different slides.
+Just use `---` surrounded by blank lines to split content into different slides.
 
 ## Documentation
 
@@ -41,11 +42,14 @@ For a full-length blog post about reveal-hugo, checkout [Harness the Power of St
 
 ### Demos
 
-Jump to the [exampleSite](exampleSite) folder in this repository to see the source code for the above presentation and several mode. Here are links to those presentations live:
+Jump to the [exampleSite](exampleSite) folder in this repository to see the source code for the above presentation and several more. Here are links to those presentations live:
 
 - [logo-example](https://reveal-hugo.dzello.com/logo-example/) - Shows how to add a logo to your presentation
 - [custom-theme-example](https://reveal-hugo.dzello.com/custom-theme-example/) - Uses Hugo pipes to compile and use a custom Reveal.js SCSS theme (recommended!)
 - [section-example](https://reveal-hugo.dzello.com/section-example/) - Very basic example that shows how to create a presentation for a Hugo section
+- [plugin-example](https://reveal-hugo.dzello.com/plugin-example/) - Shows how to add additional Reveal.js plugins to your presentation, for example an image gallery
+- [template-example](https://reveal-hugo.dzello.com/template-example/) - An example of using the slide shortcode with powerful templates
+- [bundle-example](https://reveal-hugo.dzello.com/bundle-example/) - An example of creating a presentation from one or more markdown files in a leaf bundle
 
 ### Starter repository
 
@@ -60,19 +64,25 @@ You should be able to complete this section with no prior knowledge of Hugo or R
 To start, [install Hugo](https://gohugo.io/) and create a new Hugo site:
 
 ```shell
-$ hugo new site my-presentation
+hugo new site my-presentation
 ```
 
 Change into the directory of the new site:
 
 ```shell
-$ cd my-presentation
+cd my-presentation
+```
+
+Initialize a git repository:
+
+```shell
+git init
 ```
 
 Add the reveal-hugo theme as a submodule in the themes directory:
 
 ```shell
-$ git submodule add git@github.com:dzello/reveal-hugo.git themes/reveal-hugo
+git submodule add git@github.com:dzello/reveal-hugo.git themes/reveal-hugo
 ```
 
 Open `config.toml` and add the following contents:
@@ -319,6 +329,7 @@ Customize the Reveal.js presentation by setting these values in `config.toml` or
 - `reveal_hugo.highlight_theme`: The [highlight.js](https://highlightjs.org/) theme used; defaults to "default"
 - `reveal_hugo.reveal_cdn`: The location to load Reveal.js files from; defaults to the `reveal-js` folder in the static directory to support offline development. To load from a CDN instead, set this value to `https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.7.0` or whatever CDN you prefer.
 - `reveal_hugo.highlight_cdn`: The location to load highlight.js files from; defaults to to the `highlight-js` folder in the static directory to support offline development. To load from a CDN instead, set this value to `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0` or whatever CDN you prefer.
+- `reveal_hugo.plugins`: An array of additional Reveal.js plugins to load, e.g. `["plugin/gallery/gallery.plugin.js"]`. The appropriate files will need to have been copied into the `static` directory. CDN loading is not supported. The plugins included by default are markdown, highlight.js, notes and zoom. See here for a [big list of plugins](https://github.com/hakimel/reveal.js/wiki/Plugins,-Tools-and-Hardware) you can try.
 
 This is how parameters will look in your `config.toml`:
 
@@ -348,22 +359,63 @@ transition = "zoom"
 
 See the [extensive list of Reveal.js configuration options](https://github.com/hakimel/reveal.js/#configuration) here.
 
-### Custom Reveal.js Themes
+### Custom Reveal.js themes
 
-If you have a custom reveal theme to use (in .css form), place it somewhere in your static folder. For example, if you have:
+If you have a custom reveal theme to use (in .css form), place it in the `static` folder and specify it in the configuration. For example, if your css file lives here:
 
 ```
-- static
-  - assets
+| static
+  | stylesheets
     - custom-theme.css
 ```
 
-Then you will need to have this line in `config.toml`
+Then this is what you'll put in `config.toml`:
 
 ```toml
 [params.reveal_hugo]
-reveal_hugo.custom_theme = "assets/custom-theme.css"
+reveal_hugo.custom_theme = "stylesheets/custom-theme.css"
 ```
+
+### Compiling a custom Reveal.js theme with Hugo pipes
+
+Reveal.js theme customization is easiest to do by overriding variables in the SCSS or PostCSS build process. You can take advantage of Hugo pipes to do the theme compilation. In this case, your SCSS, Saas or PostCSS file needs to live in assets:
+
+```
+| assets
+  | stylesheets
+    - custom-theme.scss
+```
+
+If you just wanted to change the presentation colors, here's what you might put in `custom-theme.scss`:
+
+```scss
+@import "reveal-js/css/theme/template/mixins";
+@import "reveal-js/css/theme/template/settings";
+
+$backgroundColor: rgb(3, 129, 45);
+$mainColor: #fff;
+$headingColor: #fff;
+```
+
+To learn more about Reveal.js theme customization, check out the [Reveal.js theme docs](https://github.com/hakimel/reveal.js/blob/master/css/theme/README.md).
+
+This is what the front matter would look like:
+
+```toml
+[params.reveal_hugo]
+reveal_hugo.custom_theme = "stylesheets/custom-theme.css"
+reveal_hugo.custom_theme_compile = true
+```
+
+You can also add options that will be passed to [Hugo's toCSS method](https://gohugo.io/hugo-pipes/scss-sass/#options):
+
+```toml
+[reveal_hugo.custom_theme_options]
+targetPath = "css/custom-theme.css"
+enableSourceMap = true
+```
+
+Check out the [custom-theme-example presentation](https://reveal-hugo.dzello.com/custom-theme-example/) to see a working example.
 
 ## Adding HTML to the layout
 
@@ -428,6 +480,26 @@ Now you can add `outputs = ["Reveal"]` to the front matter of any section's `_in
 Note: If you specify `outputs = ["Reveal"]` for a single content file, you can prevent anything being generated for that file. This is handy if you other default layouts that would have created a regular HTML file from it. Only the list file is required for the presentation.
 
 **Tip**: As of Hugo 0.42, Hugo [has theme inheritence](https://gohugo.io/news/0.42-relnotes/). You can avoid the file copying step above by adding `"reveal-hugo"` to your site's array of themes.
+
+### Create a presentation from a leaf bundle or single page type
+
+By default, reveal-hugo doesn't create presentations for single pages (i.e. pages other than `_index.md`) as it assumes those pages are pieces of a larger presentation in the section starting with `_index.md`. This might not be the case if your content is structured in a leaf bundle (the main file is then `index.md` with no underscore, which Hugo treats as a single page) or if you just want to put a presentation in a single file, say `presentation.md`. In these cases, you just need to tell Hugo to use a different layout.
+
+If you're using a leaf page bundle, set the following in the front matter of the `index.md` file:
+
+```toml
+layout = "bundle"
+```
+
+If you're in a single page file like `presentation.md`, set the following in the front matter:
+
+```toml
+layout = "list"
+```
+
+### Create a page that lists out all presentations
+
+See [this issue](https://github.com/dzello/reveal-hugo/issues/37) for a template that you can use.
 
 ## Reveal.js tips
 
